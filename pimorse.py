@@ -74,40 +74,17 @@ def initialize_gpio(led: int) -> None:
 
     if GPIO.input(led):
         GPIO.output(led, GPIO.LOW)
-
-
-def emit(space_duration: float, inter_letter_duration: float, inter_word_duration: float, message: str) -> None:
-    for word in emit_word(inter_word_duration, message):
-        for letter in emit_letter(inter_letter_duration, word):
-            yield from emit_symbol(space_duration, letter)
                 
 
-def emit_symbol(space_duration: float, letter: str) -> None:
-    morse_letter = MORSE_ALPHABET[letter]
-    for symbol in morse_letter[:-1]:
-        yield symbol
-        time.sleep(space_duration)
-    yield morse_letter[-1]
-
-
-def emit_letter(inter_letter_duration: float, word: str) -> None:
-    for letter in word[:-1]:
-        print(f"Emitting letter : {letter}")
-        yield letter
-        time.sleep(inter_letter_duration)
-    print(f"Emitting letter : {word[-1]}")
-    yield word[-1]
-
-
-def emit_word(inter_word_duration: float, message: str) -> None:
-    words = message.split()
-    for word in words[:-1]:
-        print(f"Emitting word : {word}")
-        yield word
-        time.sleep(inter_word_duration)
-    print(f"Emitting words : {words[-1]}")
-    yield words[-1]
-
+def emitter(collection, duration, trace=False):
+    for item in collection[:-1]:
+        if trace:
+            print(f"Emitting : {item}")
+        yield item
+        time.sleep(duration)
+    if trace:
+        print(f"Emitting : {collection[-1]}")
+    yield collection[-1]
 
 
 def main(message :str) -> None:
@@ -127,13 +104,16 @@ def main(message :str) -> None:
   initialize_gpio(led)
 
   try:
-      for symbol in emit(space_duration, inter_letter_duration, inter_word_duration, message.upper()):
-          if symbol == "S":
-              emit_dot()
-          elif symbol == "L":
-              emit_dash()
-          else:
-              raise ValueError("Only S or L are valid Morse symbols!")
+      for word in emitter(message.split(), inter_word_duration, True):
+          for letter in emitter(word, inter_letter_duration, True):
+              morse_letter = MORSE_ALPHABET[letter]
+              for symbol in emitter(morse_letter, space_duration):
+                  if symbol == "S":
+                      emit_dot()
+                  elif symbol == "L":
+                      emit_dash()
+                  else:
+                      raise ValueError("Only S or L are valid Morse symbols!")
   except KeyboardInterrupt:
       print("Goodbye!")
       GPIO.cleanup()
