@@ -104,7 +104,7 @@ def main(message :str) -> None:
   initialize_gpio(led)
 
   try:
-      for word in emitter(message.split(), inter_word_duration, True):
+      for word in emitter(message.upper().split(), inter_word_duration, True):
           for letter in emitter(word, inter_letter_duration, True):
               morse_letter = MORSE_ALPHABET[letter]
               for symbol in emitter(morse_letter, space_duration):
